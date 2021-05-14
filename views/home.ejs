@@ -1,0 +1,27 @@
+<%- include("partials/header.ejs") %>
+    <h1>Home</h1>
+
+    <p><%= startContent %></p>
+
+    
+    <% function truncateString(str, num){ %> 
+    <% if(num > str.length){ %>     
+    <% return str; %>         
+    <%}else{ %>     
+    <% str = str.substring(0, num) %>         
+    <% return str+"..." %>         
+    <% } %>     
+    <% } %> 
+
+        <% posts.forEach(function(post){ %>
+            <h2> <%= post.title %></h2>
+            <% let truncatedStr=truncateString(post.content, 100) %>
+ 
+            <p><%= truncatedStr %>  
+            <a href="/posts/<%= post.title %> " >Read More</a>
+            </p>
+        <%}) %>
+
+
+
+<%- include("partials/footer.ejs") %>
