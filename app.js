@@ -4,6 +4,12 @@ const express = require("express");
 const bodyParser = require("body-parser");
 const ejs = require("ejs");
 const _ = require("lodash");
+const dotenv = require("dotenv").config();
+const db_user = process.env.DB_USERNAME
+const db_password = process.env.DB_PASSWORD
+
+
+
 const mongoose = require("mongoose")
 
 const homeStartingContent = "Lacus vel facilisis volutpat est velit egestas dui id ornare. Semper auctor neque vitae tempus quam. Sit amet cursus sit amet dictum sit amet justo. Viverra tellus in hac habitasse. Imperdiet proin fermentum leo vel orci porta. Donec ultrices tincidunt arcu non sodales neque sodales ut. Mattis molestie a iaculis at erat pellentesque adipiscing. Magnis dis parturient montes nascetur ridiculus mus mauris vitae ultricies. Adipiscing elit ut aliquam purus sit amet luctus venenatis lectus. Ultrices vitae auctor eu augue ut lectus arcu bibendum at. Odio euismod lacinia at quis risus sed vulputate odio ut. Cursus mattis molestie a iaculis at erat pellentesque adipiscing.";
@@ -18,7 +24,9 @@ app.set('view engine', 'ejs');
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(express.static("public"));
 
-mongoose.connect('mongodb://localhost:27017/blogDB', { useNewUrlParser: true, useUnifiedTopology: true });
+mongoose.connect(`mongodb+srv://${db_user}:${db_password}@cluster0.soaw7.mongodb.net/blogDB`, { useNewUrlParser: true, useUnifiedTopology: true })
+
+// mongoose.connect('mongodb://localhost:27017/blogDB', { useNewUrlParser: true, useUnifiedTopology: true });
 
 const postSchema = {
   title: String,
@@ -27,39 +35,40 @@ const postSchema = {
 
 const Post = mongoose.model("Post", postSchema)
 
-const post1 = new Post({
-  title: "Day Test",
-  content: "Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the industry's standard dummy text ever since the 1500s, when an unknown printer took a galley of type and scrambled it to make a type specimen book. It has survived not only five centuries, but also the leap into electronic typesetting, remaining essentially unchanged. It was popularised in the 1960s with the release of Letraset sheets containing Lorem Ipsum passages, and more recently with desktop publishing software like Aldus PageMaker including versions of Lorem Ipsum  "
-})
+// const post1 = new Post({
+//   title: "Day Test",
+//   content: "Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the industry's standard dummy text ever since the 1500s, when an unknown printer took a galley of type and scrambled it to make a type specimen book. It has survived not only five centuries, but also the leap into electronic typesetting, remaining essentially unchanged. It was popularised in the 1960s with the release of Letraset sheets containing Lorem Ipsum passages, and more recently with desktop publishing software like Aldus PageMaker including versions of Lorem Ipsum  "
+// })
 
-const post2 = new Post({
-  title: "Day Test2",
-  content: "Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the industry's standard dummy text ever since the 1500s, when an unknown printer took a galley of type and scrambled it to make a type specimen book. It has survived not only five centuries, but also the leap into electronic typesetting, remaining essentially unchanged. It was popularised in the 1960s with the release of Letraset sheets containing Lorem Ipsum passages, and more recently with desktop publishing software like Aldus PageMaker including versions of Lorem Ipsum  "
-})
+// const post2 = new Post({
+//   title: "Day Test2",
+//   content: "Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the industry's standard dummy text ever since the 1500s, when an unknown printer took a galley of type and scrambled it to make a type specimen book. It has survived not only five centuries, but also the leap into electronic typesetting, remaining essentially unchanged. It was popularised in the 1960s with the release of Letraset sheets containing Lorem Ipsum passages, and more recently with desktop publishing software like Aldus PageMaker including versions of Lorem Ipsum  "
+// })
 
-const defaultPosts = [post1, post2]
+// const defaultPosts = [post1, post2]
 
-Post.insertMany(defaultPosts, function (err) {
-  if (err) {
-    console.log(err)
-  } else {
-    console.log("Blogs are successfully inserted into DB")
-    // res.render("home", { startContent: homeStartingContent, posts: posts})
+// Post.insertMany(defaultPosts, function (err) {
+//   if (err) {
+//     console.log(err)
+//   } else {
+//     console.log("Blogs are successfully inserted into DB")
+//     // res.render("home", { startContent: homeStartingContent, posts: posts})
 
-  }
-})
+//   }
+// })
 
 
-// let posts = []
+// let posts = [] //delete the existing posts array
 
 
 
 app.get("/", function (req, res) {
 
+  //find all the posts in the posts collection and render that in the home.ejs file.
   Post.find({}, function (err, foundPost) {
-    res.render("home", { 
-      startContent: homeStartingContent, 
-      posts: foundPost 
+    res.render("home", {
+      startContent: homeStartingContent,
+      posts: foundPost
     })
   })
 })
@@ -86,13 +95,20 @@ app.get("/compose", function (req, res) {
 
 app.post("/compose", function (req, res) {
 
+  //create a new post document using your mongoose model
   const post = new Post({
     title: req.body.postTitle,
     content: req.body.postBody
   })
-  post.save()
-  // posts.push(post)
-  res.redirect("/")
+  post.save(function (err) {
+    if (!err) {
+      res.redirect("/")
+    } else {
+      console.log("Error to save post")
+    }
+  })
+
+  // posts.push(post), save the document to your database instead of pushing to the posts array.
 
 })
 
@@ -103,7 +119,7 @@ app.get("/posts/:postId", function (req, res) {
   const requestedPostId = req.params.postId;
 
 
-  
+
   Post.findOne({ _id: requestedPostId }, function (err, post) {
     // if (!err) {
     //   console.log("Doesnt exist")
@@ -116,10 +132,10 @@ app.get("/posts/:postId", function (req, res) {
     //   // res.redirect("/" + requestedTitle)
     // }
     // else {
-      console.log("Exist")
+    console.log("Exist")
 
-      res.render("post", { title: post.title, content: post.content })
-    })
+    res.render("post", { title: post.title, content: post.content })
+  })
   // })
 
   // posts.forEach(function (post) {
